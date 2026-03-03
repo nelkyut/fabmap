@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Interactive Subdivision Map</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    body { margin: 0; }
+    #map { height: 100vh; }
+  </style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+// image size (palitan mo depende sa size ng mapa mo)
+var imageWidth = 2000;
+var imageHeight = 1200;
+
+// create map
+var map = L.map('map', {
+  crs: L.CRS.Simple,
+  minZoom: -2
+});
+
+// bounds ng image
+var bounds = [[0,0], [imageHeight, imageWidth]];
+
+// load image as map
+var image = L.imageOverlay('map.jpg', bounds).addTo(map);
+
+// fit map to image
+map.fitBounds(bounds);
+
+// SAMPLE HOUSES
+var house1 = L.marker([300, 500]).addTo(map)
+  .bindPopup("<b>House 1</b><br>Owner: Juan Dela Cruz<br>Status: Occupied");
+
+var house2 = L.marker([700, 1200]).addTo(map)
+  .bindPopup("<b>House 2</b><br>Owner: Maria Santos<br>Status: For Sale");
+
+</script>
+
+</body>
+</html>
