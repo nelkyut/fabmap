@@ -2,16 +2,19 @@
 <html>
 <head>
   <title>Interactive Subdivision Map</title>
-
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
   <style>
     body { margin: 0; }
     #map { height: 100vh; }
+
+    /* Optional: custom marker style */
+    .leaflet-marker-icon {
+      border-radius: 50%;
+      border: 2px solid #ff69b4; /* pink border */
+    }
   </style>
 </head>
-
 <body>
 
 <div id="map"></div>
@@ -20,9 +23,8 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-
-// image size (palitan mo depende sa size ng mapa mo)
-var imageWidth = 2000;
+// 📌 IMAGE MAP SETTINGS
+var imageWidth = 2000;   // palitan depende sa size ng mapa
 var imageHeight = 1200;
 
 // create map
@@ -31,26 +33,31 @@ var map = L.map('map', {
   minZoom: -2
 });
 
-// bounds ng image
+// define image bounds
 var bounds = [[0,0], [imageHeight, imageWidth]];
 
-// load image as map
+// add image overlay
 var image = L.imageOverlay('map.jpg', bounds).addTo(map);
 
-// fit map to image
+// fit map to image size
 map.fitBounds(bounds);
 
-  map.on('click', function(e) {
-  console.log(e.latlng);
+// 📌 CLICK EVENT TO SHOW COORDINATES
+map.on('click', function(e) {
+  console.log("Clicked Coordinates:", e.latlng);
+  alert("Coordinates: " + e.latlng.lat.toFixed(2) + ", " + e.latlng.lng.toFixed(2));
 });
 
-// SAMPLE HOUSES
-var house1 = L.marker([300, 500]).addTo(map)
-  .bindPopup("<b>House 1</b><br>Owner: Juan Dela Cruz<br>Status: Occupied");
+// 📌 ADD HOUSE MARKERS
+// Example: use coordinates na nakuha mo
+var house1 = L.marker([299.54, 697.03]).addTo(map)
+  .bindPopup("<b>House 1</b><br>Owner: Ronel Rivera<br>Status: Available");
 
 var house2 = L.marker([700, 1200]).addTo(map)
   .bindPopup("<b>House 2</b><br>Owner: Maria Santos<br>Status: For Sale");
 
+// 🏠 Add more houses here
+// var house3 = L.marker([lat, lng]).addTo(map).bindPopup("<b>House 3</b><br>Owner: ...");
 </script>
 
 </body>
