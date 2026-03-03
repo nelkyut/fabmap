@@ -40,6 +40,10 @@ var image = L.imageOverlay('map.jpg', bounds).addTo(map);
 // fit map to image
 map.fitBounds(bounds);
 
+  map.on('click', function(e) {
+  console.log(e.latlng);
+});
+
 // SAMPLE HOUSES
 var house1 = L.marker([300, 500]).addTo(map)
   .bindPopup("<b>House 1</b><br>Owner: Juan Dela Cruz<br>Status: Occupied");
