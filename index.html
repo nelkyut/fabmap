@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ultimate Subdivision Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+body{
+  margin:0;
+  display:flex;
+  height:100vh;
+  font-family:Arial;
+  overflow:hidden;
+}
+#map{flex:1;}
+#sidebar{
+  width:360px;
+  background:white;
+  border-left:3px solid #ddd;
+  padding:20px;
+  overflow-y:auto;
+  box-shadow:-5px 0 15px rgba(0,0,0,0.1);
+}
+h2{margin-top:0;}
+input,select,button{width:100%;padding:8px;margin-top:8px;margin-bottom:10px;border-radius:6px;border:1px solid #ccc;}
+button{background:#007bff;color:white;border:none;cursor:pointer;}
+button:hover{background:#0056b3;}
+.status{padding:6px 10px;border-radius:6px;font-weight:bold;display:inline-block;}
+.available{background:#d4f8d4;color:#0a7a0a;}
+.sale{background:#ffe4b5;color:#a15a00;}
+.sold{background:#ffd6d6;color:#b30000;}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="sidebar">
+<h2>Lot Info</h2>
+<div id="info">Click a lot on the map</div>
+<hr>
+<h3>Add / Edit Lot</h3>
+<input id="lot" placeholder="Lot Number">
+<input id="owner" placeholder="Owner Name">
+<select id="status">
+  <option>Available</option>
+  <option>For Sale</option>
+  <option>Sold</option>
+</select>
+<button onclick="saveLot()">Save Lot</button>
+<input id="search" placeholder="Search Lot Number" oninput="searchLot()">
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// map
+var imageWidth=2000, imageHeight=1200;
+var map=L.map('map',{crs:L.CRS.Simple,minZoom:-2});
+var bounds=[[0,0],[imageHeight,imageWidth]];
+L.imageOverlay('map.jpg',bounds).addTo(map);
+map.fitBounds(bounds);
+
+// icons
+var greenIcon=new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',iconSize:[32,32]});
+var redIcon=new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',iconSize:[32,32]});
+var orangeIcon=new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',iconSize:[32,32]});
+
+// storage
+var lots=[];
+var currentLat=null;
+var currentLng=null;
+
+// load saved lots
+if(localStorage.getItem("lots")){
+  lots=JSON.parse(localStorage.getItem("lots"));
+  lots.forEach(l=>addMarker(l));
+}
+
+// click map to select location
+map.on('click',function(e){
+  currentLat=e.latlng.lat;
+  currentLng=e.latlng.lng;
+  document.getElementById("info").innerHTML=
+    "Location Selected<br>Lat: "+currentLat.toFixed(2)+"<br>Lng: "+currentLng.toFixed(2);
+});
+
+// save lot
+function saveLot(){
+  var lot=document.getElementById("lot").value.trim();
+  var owner=document.getElementById("owner").value.trim();
+  var status=document.getElementById("status").value;
+
+  if(!lot){alert("Enter Lot Number"); return;}
+  if(currentLat==null){alert("Click location on map first"); return;}
+
+  // check if editing existing lot
+  var existing=lots.find(l=>l.lot===lot);
+  if(existing){
+    existing.owner=owner;
+    existing.status=status;
+    existing.marker.setIcon(getIcon(status));
+    existing.marker.off('click');
+    existing.marker.on('click',function(){showInfo(existing)});
+  } else {
+    var newLot={lat:currentLat,lng:currentLng,lot:lot,owner:owner,status:status};
+    lots.push(newLot);
+    addMarker(newLot);
+  }
+
+  localStorage.setItem("lots",JSON.stringify(lots));
+  clearForm();
+}
+
+// add marker
+function addMarker(lotObj){
+  lotObj.marker=L.marker([lotObj.lat,lotObj.lng],{icon:getIcon(lotObj.status)}).addTo(map);
+  lotObj.marker.on('click',function(){showInfo(lotObj)});
+}
+
+// get icon
+function getIcon(status){
+  if(status=="Available") return greenIcon;
+  if(status=="Sold") return redIcon;
+  if(status=="For Sale") return orangeIcon;
+}
+
+// show info in sidebar
+function showInfo(lotObj){
+  var statusClass="available";
+  if(lotObj.status=="Sold") statusClass="sold";
+  if(lotObj.status=="For Sale") statusClass="sale";
+  document.getElementById("info").innerHTML=
+    "<h3>"+lotObj.lot+"</h3>"+
+    "<b>Owner:</b> "+lotObj.owner+"<br><br>"+
+    "<span class='status "+statusClass+"'>"+lotObj.status+"</span>"+
+    "<br><br><button onclick='editLot(\""+lotObj.lot+"\")'>Edit</button>"+
+    "<button onclick='deleteLot(\""+lotObj.lot+"\")'>Delete</button>";
+}
+
+// edit lot
+function editLot(lotName){
+  var lot=lots.find(l=>l.lot===lotName);
+  if(lot){
+    document.getElementById("lot").value=lot.lot;
+    document.getElementById("owner").value=lot.owner;
+    document.getElementById("status").value=lot.status;
+    currentLat=lot.lat;
+    currentLng=lot.lng;
+  }
+}
+
+// delete lot
+function deleteLot(lotName){
+  var index=lots.findIndex(l=>l.lot===lotName);
+  if(index>-1){
+    map.removeLayer(lots[index].marker);
+    lots.splice(index,1);
+    localStorage.setItem("lots",JSON.stringify(lots));
+    document.getElementById("info").innerHTML="Lot deleted.";
+  }
+}
+
+// clear form
+function clearForm(){
+  document.getElementById("lot").value="";
+  document.getElementById("owner").value="";
+  currentLat=null;
+  currentLng=null;
+}
+
+// search lot
+function searchLot(){
+  var val=document.getElementById("search").value.toLowerCase();
+  var lot=document.getElementById("info");
+  var found=lots.find(l=>l.lot.toLowerCase().includes(val));
+  if(found) showInfo(found);
+}
+</script>
+
+</body>
+</html>
