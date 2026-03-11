@@ -64,24 +64,16 @@ var tol=15;
 
 // Detect hover → popup only
 map.on('mousemove', function(e){
-  var clicked=false;
-
+  var found=false;
   hotspots.forEach(function(h){
     var dx=e.latlng.lng - h.lng;
     var dy=e.latlng.lat - h.lat;
-
     if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
-      showSidebar(h);
-      clicked=true;
-    }
-  });
-
-  // kung walang hotspot na na-click, ipakita coordinates
-  if(!clicked){
-    document.getElementById("info").innerHTML =
-      "<h3>New Location</h3>" +
-      "<b>Lat:</b> " + e.latlng.lat.toFixed(2) + "<br>" +
-      "<b>Lng:</b> " + e.latlng.lng.toFixed(2);
+      L.popup()
+        .setLatLng([h.lat,h.lng])
+        .setContent("<b>No. "+h.no+"</b><br>"+h.name)
+        .openOn(map);
+      found=true;
     }
   });
   if(!found){
@@ -104,9 +96,7 @@ map.on('click', function(e){
 function showSidebar(h){
   document.getElementById("info").innerHTML=
     "<h3>No. "+h.no+"</h3>"+
-    "<b>Name:</b> "+h.name+"<br>"+
-    "<b>Lat:</b> "+h.lat.toFixed(2)+"<br>"+
-    "<b>Lng:</b> "+h.lng.toFixed(2);
+    "<b>Name:</b> "+h.name;
 }
 </script>
 </body>
