@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Fixed Hotspot Map – Popup & Sidebar</title>
+<title>Fixed Hotspot Map – Popup Beige</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 body{
@@ -21,6 +21,17 @@ body{
   box-shadow:-5px 0 15px rgba(0,0,0,0.1);
 }
 h2{margin-top:0;}
+
+/* Customize Leaflet popup */
+.leaflet-popup-content-wrapper{
+  background: #f5f5dc; /* beige */
+  color: #333;
+  font-weight: bold;
+  border-radius: 6px;
+}
+.leaflet-popup-tip{
+  background: #f5f5dc; /* beige */
+}
 </style>
 </head>
 <body>
@@ -49,7 +60,7 @@ var hotspots=[
 ];
 
 // Tolerance for hover/click
-var tol=15; // pixels
+var tol=15;
 
 // Detect hover → popup only
 map.on('mousemove', function(e){
