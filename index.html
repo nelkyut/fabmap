@@ -96,7 +96,9 @@ map.on('click', function(e){
 function showSidebar(h){
   document.getElementById("info").innerHTML=
     "<h3>No. "+h.no+"</h3>"+
-    "<b>Name:</b> "+h.name;
+    "<b>Name:</b> "+h.name+"<br>"+
+    "<b>Lat:</b> "+h.lat.toFixed(2)+"<br>"+
+    "<b>Lng:</b> "+h.lng.toFixed(2);
 }
 </script>
 </body>
