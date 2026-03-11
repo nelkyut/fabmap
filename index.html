@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Fixed Hotspot Map – Hover & Click</title>
+<title>Fixed Hotspot Map – Popup & Sidebar</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 body{
@@ -29,7 +29,7 @@ h2{margin-top:0;}
 
 <div id="sidebar">
 <h2>Lot / Facility Info</h2>
-<div id="info">Hover or click a lot area</div>
+<div id="info">Click a lot area to see details</div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -48,41 +48,45 @@ var hotspots=[
   {lat:789.63, lng:943.63, no:"102", name:"MWR Complex"}
 ];
 
-// Show info in sidebar
-function showInfo(h){
-  document.getElementById("info").innerHTML=
-    "<h3>No. "+h.no+"</h3>"+
-    "<b>Name:</b> "+h.name;
-}
+// Tolerance for hover/click
+var tol=15; // pixels
 
-// Detect hover
+// Detect hover → popup only
 map.on('mousemove', function(e){
-  var tol=15; // tolerance in pixels
   var found=false;
   hotspots.forEach(function(h){
     var dx=e.latlng.lng - h.lng;
     var dy=e.latlng.lat - h.lat;
     if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
-      showInfo(h);
+      L.popup()
+        .setLatLng([h.lat,h.lng])
+        .setContent("<b>No. "+h.no+"</b><br>"+h.name)
+        .openOn(map);
       found=true;
     }
   });
   if(!found){
-    document.getElementById("info").innerHTML="Hover or click a lot area";
+    map.closePopup();
   }
 });
 
-// Detect click
+// Detect click → sidebar details
 map.on('click', function(e){
-  var tol=15;
   hotspots.forEach(function(h){
     var dx=e.latlng.lng - h.lng;
     var dy=e.latlng.lat - h.lat;
     if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
-      showInfo(h);
+      showSidebar(h);
     }
   });
 });
+
+// Show info in sidebar
+function showSidebar(h){
+  document.getElementById("info").innerHTML=
+    "<h3>No. "+h.no+"</h3>"+
+    "<b>Name:</b> "+h.name;
+}
 </script>
 </body>
 </html>
