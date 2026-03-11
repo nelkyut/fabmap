@@ -1,223 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Subdivision Map Manager</title>
-
+<title>Fixed Hotspot Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
 <style>
-
 body{
-margin:0;
-display:flex;
-height:100vh;
-font-family:Arial;
-overflow:hidden;
+  margin:0;
+  display:flex;
+  height:100vh;
+  font-family:Arial;
+  overflow:hidden;
 }
-
-/* MAP */
-
-#map{
-flex:1;
-}
-
-/* SIDEBAR */
-
+#map{flex:1;}
 #sidebar{
-width:340px;
-background:white;
-border-left:3px solid #ddd;
-padding:20px;
-overflow:auto;
-box-shadow:-5px 0 15px rgba(0,0,0,0.1);
+  width:360px;
+  background:white;
+  border-left:3px solid #ddd;
+  padding:20px;
+  overflow-y:auto;
+  box-shadow:-5px 0 15px rgba(0,0,0,0.1);
 }
-
-h2{
-margin-top:0;
-}
-
-input,select,button{
-width:100%;
-padding:8px;
-margin-top:8px;
-margin-bottom:10px;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
-button{
-background:#007bff;
-color:white;
-border:none;
-cursor:pointer;
-}
-
-button:hover{
-background:#0056b3;
-}
-
-.status{
-padding:6px 10px;
-border-radius:6px;
-font-weight:bold;
-display:inline-block;
-}
-
-.available{
-background:#d4f8d4;
-color:#0a7a0a;
-}
-
-.sale{
-background:#ffe4b5;
-color:#a15a00;
-}
-
-.sold{
-background:#ffd6d6;
-color:#b30000;
-}
-
+h2{margin-top:0;}
 </style>
 </head>
-
 <body>
 
 <div id="map"></div>
 
 <div id="sidebar">
-
-<h2>Lot Details</h2>
-
-<div id="info">Click a location on map</div>
-
-<hr>
-
-<h3>Add / Edit Lot</h3>
-
-<input id="lot" placeholder="Lot Number">
-
-<input id="owner" placeholder="Owner Name">
-
-<select id="status">
-<option>Available</option>
-<option>For Sale</option>
-<option>Sold</option>
-</select>
-
-<button onclick="saveLot()">Save Lot</button>
-
+<h2>Lot / Facility Info</h2>
+<div id="info">Hover over a lot area</div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
-
-// map size
-
-var imageWidth=2000;
-var imageHeight=1200;
-
+// Map setup
+var imageWidth=2000, imageHeight=1200;
 var map=L.map('map',{crs:L.CRS.Simple,minZoom:-2});
-
 var bounds=[[0,0],[imageHeight,imageWidth]];
-
 L.imageOverlay('map.jpg',bounds).addTo(map);
-
 map.fitBounds(bounds);
 
+// Fixed hotspots
+var hotspots=[
+  {lat:742.20, lng:791.30, no:"100", name:"Two Warehouse"},
+  {lat:733.97, lng:831.66, no:"101", name:"550th ABG Annex"},
+  {lat:789.63, lng:943.63, no:"102", name:"MWR Complex"}
+];
 
-// icons
-
-var greenIcon=new L.Icon({
-iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-iconSize:[32,32]
+// Detect hover
+map.on('mousemove', function(e){
+  var tol=15; // tolerance in pixels
+  var found=false;
+  hotspots.forEach(function(h){
+    var dx=e.latlng.lng - h.lng;
+    var dy=e.latlng.lat - h.lat;
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+      showInfo(h);
+      found=true;
+    }
+  });
+  if(!found){
+    document.getElementById("info").innerHTML="Hover over a lot area";
+  }
 });
 
-var redIcon=new L.Icon({
-iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-iconSize:[32,32]
-});
-
-var orangeIcon=new L.Icon({
-iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
-iconSize:[32,32]
-});
-
-
-// storage
-
-var lots=[];
-var currentLat=null;
-var currentLng=null;
-
-
-// click map
-
-map.on('click',function(e){
-
-currentLat=e.latlng.lat;
-currentLng=e.latlng.lng;
-
-document.getElementById("info").innerHTML=
-"Location Selected<br>"+
-"Lat: "+currentLat.toFixed(2)+"<br>"+
-"Lng: "+currentLng.toFixed(2);
-
-});
-
-
-// save lot
-
-function saveLot(){
-
-var lot=document.getElementById("lot").value;
-var owner=document.getElementById("owner").value;
-var status=document.getElementById("status").value;
-
-if(currentLat==null){
-alert("Click location on map first");
-return;
+// Show info in sidebar
+function showInfo(h){
+  document.getElementById("info").innerHTML=
+    "<h3>No. "+h.no+"</h3>"+
+    "<b>Name:</b> "+h.name;
 }
-
-var icon=greenIcon;
-
-if(status=="Sold"){icon=redIcon;}
-if(status=="For Sale"){icon=orangeIcon;}
-
-var marker=L.marker([currentLat,currentLng],{icon:icon}).addTo(map);
-
-marker.on("click",function(){
-
-var statusClass="available";
-
-if(status=="Sold"){statusClass="sold";}
-if(status=="For Sale"){statusClass="sale";}
-
-document.getElementById("info").innerHTML=
-
-"<h3>"+lot+"</h3>"+
-"<b>Owner:</b> "+owner+"<br><br>"+
-"<span class='status "+statusClass+"'>"+status+"</span>";
-
-});
-
-lots.push({
-lat:currentLat,
-lng:currentLng,
-lot:lot,
-owner:owner,
-status:status
-});
-
-console.log(JSON.stringify(lots));
-
-document.getElementById("lot").value="";
-document.getElementById("owner").value="";
-
-}
-
 </script>
-
 </body>
 </html>
