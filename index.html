@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Interactive Property Map</title>
+<title>Subdivision Interactive Map</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
@@ -9,45 +9,44 @@
 
 body{
 margin:0;
-font-family:Arial, Helvetica, sans-serif;
-background:#f4f6f9;
+font-family:Segoe UI, Arial;
+background:#eef2f7;
 }
 
 #map{
 height:100vh;
 }
 
-/* Info Panel */
-
 #infoBox{
 position:absolute;
 top:20px;
 right:20px;
 background:white;
-padding:15px;
-border-radius:10px;
-box-shadow:0 5px 20px rgba(0,0,0,0.2);
-width:220px;
+padding:18px;
+width:240px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
 z-index:999;
-transition:0.3s;
 }
 
 #infoBox h3{
 margin-top:0;
-color:#333;
+font-size:18px;
 }
 
-#infoContent{
-font-size:14px;
-color:#444;
+.status{
+font-weight:bold;
+padding:4px 8px;
+border-radius:6px;
+display:inline-block;
 }
 
-.empty{
-color:#999;
-font-style:italic;
-}
+.available{background:#d4f8d4;color:#0b7a0b;}
+.sale{background:#ffe4b5;color:#a15a00;}
+.sold{background:#ffd6d6;color:#b30000;}
 
 </style>
+
 </head>
 
 <body>
@@ -55,85 +54,102 @@ font-style:italic;
 <div id="map"></div>
 
 <div id="infoBox">
-<h3>Property Info</h3>
-<div id="infoContent" class="empty">
-Click a house on the map
-</div>
+<h3>Lot Details</h3>
+<div id="infoContent">Click a lot</div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-// image size
+// map image size
 var imageWidth = 2000;
 var imageHeight = 1200;
 
-// create map
-var map = L.map('map',{
-crs: L.CRS.Simple,
-minZoom:-2
-});
+var map = L.map('map',{crs:L.CRS.Simple,minZoom:-2});
 
 var bounds = [[0,0],[imageHeight,imageWidth]];
 
-L.imageOverlay('map.jpg', bounds).addTo(map);
+L.imageOverlay('map.jpg',bounds).addTo(map);
+
 map.fitBounds(bounds);
 
-// house data
+
+// custom icons
+
+var greenIcon = new L.Icon({
+iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+iconSize:[32,32]
+});
+
+var redIcon = new L.Icon({
+iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+iconSize:[32,32]
+});
+
+var orangeIcon = new L.Icon({
+iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+iconSize:[32,32]
+});
+
+
+// lot data
 
 var houses = [
 
 {
 lat:299.54,
 lng:697.03,
+lot:"Lot 1",
 owner:"Ronel Rivera",
-status:"Available",
-lot:"House 1"
+status:"Available"
 },
 
 {
 lat:700,
 lng:1200,
+lot:"Lot 2",
 owner:"Maria Santos",
-status:"For Sale",
-lot:"House 2"
+status:"Sold"
+},
+
+{
+lat:450,
+lng:900,
+lot:"Lot 3",
+owner:"Juan Cruz",
+status:"For Sale"
 }
 
 ];
 
 
-// click function
-
-map.on('click',function(e){
-
-var tol = 20;
-var found = false;
+// create markers
 
 houses.forEach(function(h){
 
-var dx = e.latlng.lng - h.lng;
-var dy = e.latlng.lat - h.lat;
+var icon;
 
-if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+if(h.status=="Available"){icon=greenIcon;}
+if(h.status=="Sold"){icon=redIcon;}
+if(h.status=="For Sale"){icon=orangeIcon;}
 
-document.getElementById("infoContent").innerHTML =
+var marker = L.marker([h.lat,h.lng],{icon:icon}).addTo(map);
+
+marker.on("click",function(){
+
+var statusClass="available";
+
+if(h.status=="Sold"){statusClass="sold";}
+if(h.status=="For Sale"){statusClass="sale";}
+
+document.getElementById("infoContent").innerHTML=
+
 "<b>"+h.lot+"</b><br>"+
-"Owner: "+h.owner+"<br>"+
-"Status: "+h.status;
-
-found = true;
-
-}
+"Owner: "+h.owner+"<br><br>"+
+"<span class='status "+statusClass+"'>"+h.status+"</span>";
 
 });
-
-if(!found){
-
-document.getElementById("infoContent").innerHTML =
-"<span class='empty'>No house here</span>";
-
-}
 
 });
 
