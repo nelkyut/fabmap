@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Fixed Hotspot Map – Sidebar & Popup Beige</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+body{
+  margin:0;
+  display:flex;
+  height:100vh;
+  font-family:Arial;
+  overflow:hidden;
+}
+#map{flex:1;}
+#sidebar{
+  width:360px;
+  background:#f5f5dc; /* beige sidebar */
+  border-left:3px solid #ddd;
+  padding:20px;
+  overflow-y:auto;
+  box-shadow:-5px 0 15px rgba(0,0,0,0.1);
+}
+h2{margin-top:0;}
+
+/* Customize Leaflet popup */
+.leaflet-popup-content-wrapper{
+  background: #f5f5dc; /* beige */
+  color: #333;
+  font-weight: bold;
+  border-radius: 6px;
+}
+.leaflet-popup-tip{
+  background: #f5f5dc; /* beige */
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="sidebar">
+<h2>Lot / Facility Info</h2>
+<div id="info">Click a lot area to see details</div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+// Map setup
+var imageWidth=2000, imageHeight=1200;
+var map=L.map('map',{crs:L.CRS.Simple,minZoom:-2});
+var bounds=[[0,0],[imageHeight,imageWidth]];
+L.imageOverlay('map.jpg',bounds).addTo(map);
+map.fitBounds(bounds);
+
+// Fixed hotspots
+var hotspots=[
+  {lat:742.20, lng:791.30, no:"100", name:"Two Warehouse"},
+  {lat:733.97, lng:831.66, no:"101", name:"550th ABG Annex"},
+  {lat:789.63, lng:943.63, no:"102", name:"MWR Complex"}
+];
+
+// Tolerance for hover/click
+var tol=15;
+
+// Detect hover → popup only
+map.on('mousemove', function(e){
+  var found=false;
+  hotspots.forEach(function(h){
+    var dx=e.latlng.lng - h.lng;
+    var dy=e.latlng.lat - h.lat;
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+      L.popup()
+        .setLatLng([h.lat,h.lng])
+        .setContent("<b>No. "+h.no+"</b><br>"+h.name)
+        .openOn(map);
+      found=true;
+    }
+  });
+  if(!found){
+    map.closePopup();
+  }
+});
+
+// Detect click → sidebar details
+map.on('click', function(e){
+  hotspots.forEach(function(h){
+    var dx=e.latlng.lng - h.lng;
+    var dy=e.latlng.lat - h.lat;
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+      showSidebar(h);
+    }
+  });
+});
+
+// Show info in sidebar
+function showSidebar(h){
+  document.getElementById("info").innerHTML=
+    "<h3>No. "+h.no+"</h3>"+
+    "<b>Name:</b> "+h.name;
+}
+</script>
+</body>
+</html>
