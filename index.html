@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Ultimate Subdivision Map</title>
+<title>Interactive Hotspot Map Admin</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 body{
@@ -21,8 +21,12 @@ body{
   box-shadow:-5px 0 15px rgba(0,0,0,0.1);
 }
 h2{margin-top:0;}
-input,select,button{width:100%;padding:8px;margin-top:8px;margin-bottom:10px;border-radius:6px;border:1px solid #ccc;}
-button{background:#007bff;color:white;border:none;cursor:pointer;}
+input,select,button{
+  width:100%;padding:8px;margin-top:8px;margin-bottom:10px;border-radius:6px;border:1px solid #ccc;
+}
+button{
+  background:#007bff;color:white;border:none;cursor:pointer;
+}
 button:hover{background:#0056b3;}
 .status{padding:6px 10px;border-radius:6px;font-weight:bold;display:inline-block;}
 .available{background:#d4f8d4;color:#0a7a0a;}
@@ -36,9 +40,9 @@ button:hover{background:#0056b3;}
 
 <div id="sidebar">
 <h2>Lot Info</h2>
-<div id="info">Click a lot on the map</div>
+<div id="info">Hover over or click a lot area</div>
 <hr>
-<h3>Add / Edit Lot</h3>
+<h3>Add / Edit Hotspot</h3>
 <input id="lot" placeholder="Lot Number">
 <input id="owner" placeholder="Owner Name">
 <select id="status">
@@ -46,45 +50,69 @@ button:hover{background:#0056b3;}
   <option>For Sale</option>
   <option>Sold</option>
 </select>
-<button onclick="saveLot()">Save Lot</button>
-<input id="search" placeholder="Search Lot Number" oninput="searchLot()">
+<button onclick="saveHotspot()">Save Hotspot</button>
+<input id="search" placeholder="Search Lot Number" oninput="searchHotspot()">
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// map
-var imageWidth=2000, imageHeight=1200;
+// map setup
+var imageWidth=2000,imageHeight=1200;
 var map=L.map('map',{crs:L.CRS.Simple,minZoom:-2});
 var bounds=[[0,0],[imageHeight,imageWidth]];
 L.imageOverlay('map.jpg',bounds).addTo(map);
 map.fitBounds(bounds);
 
-// icons
-var greenIcon=new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',iconSize:[32,32]});
-var redIcon=new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/red-dot.png',iconSize:[32,32]});
-var orangeIcon=new L.Icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',iconSize:[32,32]});
-
 // storage
-var lots=[];
+var hotspots=[];
 var currentLat=null;
 var currentLng=null;
 
-// load saved lots
-if(localStorage.getItem("lots")){
-  lots=JSON.parse(localStorage.getItem("lots"));
-  lots.forEach(l=>addMarker(l));
+// load saved hotspots
+if(localStorage.getItem("hotspots")){
+  hotspots=JSON.parse(localStorage.getItem("hotspots"));
 }
 
-// click map to select location
-map.on('click',function(e){
+// detect hover
+map.on('mousemove', function(e){
+  var tol=20; 
+  var found=false;
+  hotspots.forEach(function(h){
+    var dx=e.latlng.lng - h.lng;
+    var dy=e.latlng.lat - h.lat;
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+      showInfo(h);
+      found=true;
+    }
+  });
+  if(!found){
+    document.getElementById("info").innerHTML="Hover over or click a lot area";
+  }
+});
+
+// click to select location for adding new hotspot
+map.on('click', function(e){
   currentLat=e.latlng.lat;
   currentLng=e.latlng.lng;
   document.getElementById("info").innerHTML=
-    "Location Selected<br>Lat: "+currentLat.toFixed(2)+"<br>Lng: "+currentLng.toFixed(2);
+    "Location selected<br>Lat: "+currentLat.toFixed(2)+"<br>Lng: "+currentLng.toFixed(2);
 });
 
-// save lot
-function saveLot(){
+// show info in sidebar
+function showInfo(h){
+  var statusClass="available";
+  if(h.status=="Sold") statusClass="sold";
+  if(h.status=="For Sale") statusClass="sale";
+  document.getElementById("info").innerHTML=
+    "<h3>"+h.lot+"</h3>"+
+    "<b>Owner:</b> "+h.owner+"<br><br>"+
+    "<span class='status "+statusClass+"'>"+h.status+"</span>"+
+    "<br><br><button onclick='editHotspot(\""+h.lot+"\")'>Edit</button>"+
+    "<button onclick='deleteHotspot(\""+h.lot+"\")'>Delete</button>";
+}
+
+// save hotspot
+function saveHotspot(){
   var lot=document.getElementById("lot").value.trim();
   var owner=document.getElementById("owner").value.trim();
   var status=document.getElementById("status").value;
@@ -92,70 +120,38 @@ function saveLot(){
   if(!lot){alert("Enter Lot Number"); return;}
   if(currentLat==null){alert("Click location on map first"); return;}
 
-  // check if editing existing lot
-  var existing=lots.find(l=>l.lot===lot);
+  var existing=hotspots.find(h=>h.lot===lot);
   if(existing){
     existing.owner=owner;
     existing.status=status;
-    existing.marker.setIcon(getIcon(status));
-    existing.marker.off('click');
-    existing.marker.on('click',function(){showInfo(existing)});
   } else {
-    var newLot={lat:currentLat,lng:currentLng,lot:lot,owner:owner,status:status};
-    lots.push(newLot);
-    addMarker(newLot);
+    hotspots.push({lat:currentLat,lng:currentLng,lot:lot,owner:owner,status:status});
   }
 
-  localStorage.setItem("lots",JSON.stringify(lots));
+  localStorage.setItem("hotspots",JSON.stringify(hotspots));
   clearForm();
+  alert("Hotspot saved!");
 }
 
-// add marker
-function addMarker(lotObj){
-  lotObj.marker=L.marker([lotObj.lat,lotObj.lng],{icon:getIcon(lotObj.status)}).addTo(map);
-  lotObj.marker.on('click',function(){showInfo(lotObj)});
-}
-
-// get icon
-function getIcon(status){
-  if(status=="Available") return greenIcon;
-  if(status=="Sold") return redIcon;
-  if(status=="For Sale") return orangeIcon;
-}
-
-// show info in sidebar
-function showInfo(lotObj){
-  var statusClass="available";
-  if(lotObj.status=="Sold") statusClass="sold";
-  if(lotObj.status=="For Sale") statusClass="sale";
-  document.getElementById("info").innerHTML=
-    "<h3>"+lotObj.lot+"</h3>"+
-    "<b>Owner:</b> "+lotObj.owner+"<br><br>"+
-    "<span class='status "+statusClass+"'>"+lotObj.status+"</span>"+
-    "<br><br><button onclick='editLot(\""+lotObj.lot+"\")'>Edit</button>"+
-    "<button onclick='deleteLot(\""+lotObj.lot+"\")'>Delete</button>";
-}
-
-// edit lot
-function editLot(lotName){
-  var lot=lots.find(l=>l.lot===lotName);
-  if(lot){
-    document.getElementById("lot").value=lot.lot;
-    document.getElementById("owner").value=lot.owner;
-    document.getElementById("status").value=lot.status;
-    currentLat=lot.lat;
-    currentLng=lot.lng;
+// edit hotspot
+function editHotspot(lotName){
+  var h=hotspots.find(h=>h.lot===lotName);
+  if(h){
+    document.getElementById("lot").value=h.lot;
+    document.getElementById("owner").value=h.owner;
+    document.getElementById("status").value=h.status;
+    currentLat=h.lat;
+    currentLng=h.lng;
   }
 }
 
-// delete lot
-function deleteLot(lotName){
-  var index=lots.findIndex(l=>l.lot===lotName);
+// delete hotspot
+function deleteHotspot(lotName){
+  var index=hotspots.findIndex(h=>h.lot===lotName);
   if(index>-1){
-    map.removeLayer(lots[index].marker);
-    lots.splice(index,1);
-    localStorage.setItem("lots",JSON.stringify(lots));
-    document.getElementById("info").innerHTML="Lot deleted.";
+    hotspots.splice(index,1);
+    localStorage.setItem("hotspots",JSON.stringify(hotspots));
+    document.getElementById("info").innerHTML="Hotspot deleted.";
   }
 }
 
@@ -167,14 +163,13 @@ function clearForm(){
   currentLng=null;
 }
 
-// search lot
-function searchLot(){
+// search hotspot
+function searchHotspot(){
   var val=document.getElementById("search").value.toLowerCase();
-  var lot=document.getElementById("info");
-  var found=lots.find(l=>l.lot.toLowerCase().includes(val));
+  var found=hotspots.find(h=>h.lot.toLowerCase().includes(val));
   if(found) showInfo(found);
 }
-</script>
 
+</script>
 </body>
 </html>
