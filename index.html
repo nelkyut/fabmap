@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Subdivision Interactive Map</title>
+<title>Subdivision Map</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
@@ -9,41 +9,54 @@
 
 body{
 margin:0;
-font-family:Segoe UI, Arial;
-background:#eef2f7;
+font-family:Arial, Helvetica, sans-serif;
+display:flex;
+height:100vh;
+overflow:hidden;
 }
+
+/* MAP AREA */
 
 #map{
-height:100vh;
+flex:1;
 }
 
-#infoBox{
-position:absolute;
-top:20px;
-right:20px;
+/* RIGHT PANEL */
+
+#sidebar{
+width:320px;
 background:white;
-padding:18px;
-width:240px;
-border-radius:12px;
-box-shadow:0 10px 25px rgba(0,0,0,0.2);
-z-index:999;
+border-left:3px solid #ddd;
+padding:20px;
+box-shadow:-5px 0 15px rgba(0,0,0,0.1);
+overflow-y:auto;
 }
 
-#infoBox h3{
+#sidebar h2{
 margin-top:0;
-font-size:18px;
 }
 
 .status{
-font-weight:bold;
-padding:4px 8px;
+padding:6px 10px;
 border-radius:6px;
+font-weight:bold;
 display:inline-block;
 }
 
-.available{background:#d4f8d4;color:#0b7a0b;}
-.sale{background:#ffe4b5;color:#a15a00;}
-.sold{background:#ffd6d6;color:#b30000;}
+.available{
+background:#d4f8d4;
+color:#0a7a0a;
+}
+
+.sold{
+background:#ffd6d6;
+color:#b30000;
+}
+
+.sale{
+background:#ffe4b5;
+color:#a15a00;
+}
 
 </style>
 
@@ -53,29 +66,39 @@ display:inline-block;
 
 <div id="map"></div>
 
-<div id="infoBox">
-<h3>Lot Details</h3>
-<div id="infoContent">Click a lot</div>
+<div id="sidebar">
+<h2>Lot Information</h2>
+
+<div id="info">
+
+Click a lot on the map to see details.
+
+</div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-// map image size
+// image size
+
 var imageWidth = 2000;
 var imageHeight = 1200;
 
-var map = L.map('map',{crs:L.CRS.Simple,minZoom:-2});
+var map = L.map('map',{
+crs:L.CRS.Simple,
+minZoom:-2
+});
 
-var bounds = [[0,0],[imageHeight,imageWidth]];
+var bounds=[[0,0],[imageHeight,imageWidth]];
 
 L.imageOverlay('map.jpg',bounds).addTo(map);
 
 map.fitBounds(bounds);
 
 
-// custom icons
+// icons
 
 var greenIcon = new L.Icon({
 iconUrl:'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
@@ -93,9 +116,9 @@ iconSize:[32,32]
 });
 
 
-// lot data
+// lots data
 
-var houses = [
+var houses=[
 
 {
 lat:299.54,
@@ -134,7 +157,7 @@ if(h.status=="Available"){icon=greenIcon;}
 if(h.status=="Sold"){icon=redIcon;}
 if(h.status=="For Sale"){icon=orangeIcon;}
 
-var marker = L.marker([h.lat,h.lng],{icon:icon}).addTo(map);
+var marker=L.marker([h.lat,h.lng],{icon:icon}).addTo(map);
 
 marker.on("click",function(){
 
@@ -143,10 +166,10 @@ var statusClass="available";
 if(h.status=="Sold"){statusClass="sold";}
 if(h.status=="For Sale"){statusClass="sale";}
 
-document.getElementById("infoContent").innerHTML=
+document.getElementById("info").innerHTML=
 
-"<b>"+h.lot+"</b><br>"+
-"Owner: "+h.owner+"<br><br>"+
+"<h3>"+h.lot+"</h3>"+
+"<b>Owner:</b> "+h.owner+"<br><br>"+
 "<span class='status "+statusClass+"'>"+h.status+"</span>";
 
 });
