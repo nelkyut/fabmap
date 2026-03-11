@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Fixed Hotspot Map</title>
+<title>Fixed Hotspot Map – Hover & Click</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
 body{
@@ -29,7 +29,7 @@ h2{margin-top:0;}
 
 <div id="sidebar">
 <h2>Lot / Facility Info</h2>
-<div id="info">Hover over a lot area</div>
+<div id="info">Hover or click a lot area</div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -48,6 +48,13 @@ var hotspots=[
   {lat:789.63, lng:943.63, no:"102", name:"MWR Complex"}
 ];
 
+// Show info in sidebar
+function showInfo(h){
+  document.getElementById("info").innerHTML=
+    "<h3>No. "+h.no+"</h3>"+
+    "<b>Name:</b> "+h.name;
+}
+
 // Detect hover
 map.on('mousemove', function(e){
   var tol=15; // tolerance in pixels
@@ -61,16 +68,21 @@ map.on('mousemove', function(e){
     }
   });
   if(!found){
-    document.getElementById("info").innerHTML="Hover over a lot area";
+    document.getElementById("info").innerHTML="Hover or click a lot area";
   }
 });
 
-// Show info in sidebar
-function showInfo(h){
-  document.getElementById("info").innerHTML=
-    "<h3>No. "+h.no+"</h3>"+
-    "<b>Name:</b> "+h.name;
-}
+// Detect click
+map.on('click', function(e){
+  var tol=15;
+  hotspots.forEach(function(h){
+    var dx=e.latlng.lng - h.lng;
+    var dy=e.latlng.lat - h.lat;
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+      showInfo(h);
+    }
+  });
+});
 </script>
 </body>
 </html>
