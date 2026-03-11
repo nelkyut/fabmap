@@ -83,11 +83,15 @@ map.on('mousemove', function(e){
 
 // Detect click → sidebar details
 map.on('click', function(e){
+  var clicked=false;
+
   hotspots.forEach(function(h){
     var dx=e.latlng.lng - h.lng;
     var dy=e.latlng.lat - h.lat;
+
     if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
       showSidebar(h);
+      clicked=true;
     }
   });
 });
