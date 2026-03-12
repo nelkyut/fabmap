@@ -75,15 +75,19 @@ L.imageOverlay('map.jpg',bounds).addTo(map);
 map.fitBounds(bounds);
 
 
-// HOTSPOTS
+// HOTSPOTS (Updated list)
 var hotspots=[
-  {lat:742.20, lng:791.30, no:"100", name:"Two Warehouse"},
-  {lat:733.97, lng:831.66, no:"101", name:"550th ABG Annex"},
-  {lat:789.63, lng:943.63, no:"102", name:"MWR Complex"}
+  {no:"100", name:"Two Warehouse", lat:742.20, lng:791.30},
+  {no:"101", name:"550th ABG Annex", lat:733.97, lng:831.66},
+  {no:"102", name:"MWR Complex", lat:789.63, lng:943.63},
+  {no:"1", name:"MRF", lat:453.88, lng:537.38},
+  {no:"2", name:"Firing Range (Long & Short Arms)", lat:452.14, lng:559.76},
+  {no:"3", name:"300th AISG / Intelligence Compound", lat:435.26, lng:606.65},
+  {no:"4", name:"Petron", lat:439.13, lng:642.07},
+  {no:"5", name:"PAFTSTA Compound", lat:430.82, lng:708.26}
 ];
 
-
-// CLICK TOLERANCE
+// CLICK TOLERANCE → mas precise
 var tol=5;
 
 
