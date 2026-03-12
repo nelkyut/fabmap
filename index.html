@@ -37,9 +37,12 @@ h2{margin-top:0;}
   background:#f5f5dc;
 }
 
-/* pointer cursor */
-.hotspot-hover{
-  cursor:pointer;
+/* YELLOW HAND CURSOR */
+.yellow-cursor{
+cursor:url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'>\
+<path fill='yellow' stroke='black' stroke-width='1' d='M9 11V5a1 1 0 0 1 2 0v6h1V4a1 1 0 0 1 2 0v7h1V6a1 1 0 0 1 2 0v8h1V9a1 1 0 0 1 2 0v9a4 4 0 0 1-4 4h-5a4 4 0 0 1-3.7-2.5L6 14a1 1 0 0 1 1.8-.9L9 16v-5z'/>\
+</svg>") 16 0, pointer;
 }
 </style>
 </head>
@@ -50,7 +53,7 @@ h2{margin-top:0;}
 
 <div id="sidebar">
 <h2>MASTER DEVELOPMENT PLAN AT FAB</h2>
-<div id="info">Click a facility on the map</div>
+<div id="info">Click anywhere on the map</div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -71,6 +74,7 @@ var bounds=[[0,0],[imageHeight,imageWidth]];
 L.imageOverlay('map.jpg',bounds).addTo(map);
 map.fitBounds(bounds);
 
+
 // HOTSPOTS
 var hotspots=[
   {lat:742.20, lng:791.30, no:"100", name:"Two Warehouse"},
@@ -79,60 +83,78 @@ var hotspots=[
 ];
 
 
-// CREATE HOTSPOT MARKERS
-hotspots.forEach(function(h){
-
-  var marker=L.circleMarker([h.lat,h.lng],{
-
-    radius:12,
-    color:"yellow",
-    fillColor:"yellow",
-    fillOpacity:0,
-    weight:3
-
-  }).addTo(map);
+// CLICK TOLERANCE
+var tol=15;
 
 
-  // HOVER EFFECT
-  marker.on("mouseover",function(){
+// HOVER → POPUP + YELLOW CURSOR
+map.on('mousemove',function(e){
 
-    marker.setStyle({
-      fillOpacity:0.6
-    });
+  var found=false;
 
-    map.getContainer().style.cursor="pointer";
+  hotspots.forEach(function(h){
 
-    L.popup()
-      .setLatLng([h.lat,h.lng])
-      .setContent("<b>No. "+h.no+"</b><br>"+h.name)
-      .openOn(map);
+    var dx=e.latlng.lng-h.lng;
+    var dy=e.latlng.lat-h.lat;
+
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+
+      L.popup()
+        .setLatLng([h.lat,h.lng])
+        .setContent("<b>No. "+h.no+"</b><br>"+h.name)
+        .openOn(map);
+
+      map.getContainer().classList.add("yellow-cursor");
+
+      found=true;
+
+    }
 
   });
 
-
-  marker.on("mouseout",function(){
-
-    marker.setStyle({
-      fillOpacity:0
-    });
-
-    map.getContainer().style.cursor="";
-
+  if(!found){
     map.closePopup();
+    map.getContainer().classList.remove("yellow-cursor");
+  }
+
+});
+
+
+// CLICK → SIDEBAR
+map.on('click',function(e){
+
+  var lat=e.latlng.lat;
+  var lng=e.latlng.lng;
+
+  var clickedHotspot=null;
+
+  hotspots.forEach(function(h){
+
+    var dx=lng-h.lng;
+    var dy=lat-h.lat;
+
+    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
+      clickedHotspot=h;
+    }
 
   });
 
-
-  // CLICK → SIDEBAR
-  marker.on("click",function(){
+  if(clickedHotspot){
 
     document.getElementById("info").innerHTML=
-      "<h3>No. "+h.no+"</h3>"+
-      "<b>Name:</b> "+h.name+"<br><br>"+
-      "<b>Lat:</b> "+h.lat.toFixed(2)+"<br>"+
-      "<b>Lng:</b> "+h.lng.toFixed(2);
+      "<h3>No. "+clickedHotspot.no+"</h3>"+
+      "<b>Name:</b> "+clickedHotspot.name+"<br><br>"+
+      "<b>Lat:</b> "+lat.toFixed(2)+"<br>"+
+      "<b>Lng:</b> "+lng.toFixed(2);
 
-  });
+  }else{
+
+    document.getElementById("info").innerHTML=
+      "<h3>Map Coordinates</h3>"+
+      "<b>Lat:</b> "+lat.toFixed(2)+"<br>"+
+      "<b>Lng:</b> "+lng.toFixed(2);
+
+  }
 
 });
 
