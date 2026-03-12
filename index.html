@@ -3,6 +3,7 @@
 <head>
 <title>Hotspot Map – Sidebar & Popup Beige</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <style>
 body{
   margin:0;
@@ -35,6 +36,11 @@ h2{margin-top:0;}
 .leaflet-popup-tip{
   background:#f5f5dc;
 }
+
+/* pointer cursor */
+.hotspot-hover{
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -44,10 +50,11 @@ h2{margin-top:0;}
 
 <div id="sidebar">
 <h2>MASTER DEVELOPMENT PLAN AT FAB</h2>
-<div id="info">Click anywhere on the map</div>
+<div id="info">Click a facility on the map</div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
 
 // MAP SETUP
@@ -69,78 +76,63 @@ var hotspots=[
   {lat:742.20, lng:791.30, no:"100", name:"Two Warehouse"},
   {lat:733.97, lng:831.66, no:"101", name:"550th ABG Annex"},
   {lat:789.63, lng:943.63, no:"102", name:"MWR Complex"}
-  
 ];
 
-// CLICK TOLERANCE
-var tol=15;
+
+// CREATE HOTSPOT MARKERS
+hotspots.forEach(function(h){
+
+  var marker=L.circleMarker([h.lat,h.lng],{
+
+    radius:12,
+    color:"yellow",
+    fillColor:"yellow",
+    fillOpacity:0,
+    weight:3
+
+  }).addTo(map);
 
 
-// HOVER → POPUP
-map.on('mousemove',function(e){
+  // HOVER EFFECT
+  marker.on("mouseover",function(){
 
-  var found=false;
+    marker.setStyle({
+      fillOpacity:0.6
+    });
 
-  hotspots.forEach(function(h){
+    map.getContainer().style.cursor="pointer";
 
-    var dx=e.latlng.lng-h.lng;
-    var dy=e.latlng.lat-h.lat;
-
-    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
-
-      L.popup()
-        .setLatLng([h.lat,h.lng])
-        .setContent("<b>No. "+h.no+"</b><br>"+h.name)
-        .openOn(map);
-
-      found=true;
-
-    }
+    L.popup()
+      .setLatLng([h.lat,h.lng])
+      .setContent("<b>No. "+h.no+"</b><br>"+h.name)
+      .openOn(map);
 
   });
 
-  if(!found){
+
+  marker.on("mouseout",function(){
+
+    marker.setStyle({
+      fillOpacity:0
+    });
+
+    map.getContainer().style.cursor="";
+
     map.closePopup();
-  }
-
-});
-
-
-// CLICK → SIDEBAR
-map.on('click',function(e){
-
-  var lat=e.latlng.lat;
-  var lng=e.latlng.lng;
-
-  var clickedHotspot=null;
-
-  hotspots.forEach(function(h){
-
-    var dx=lng-h.lng;
-    var dy=lat-h.lat;
-
-    if(Math.abs(dx)<=tol && Math.abs(dy)<=tol){
-      clickedHotspot=h;
-    }
 
   });
 
-  if(clickedHotspot){
+
+  // CLICK → SIDEBAR
+  marker.on("click",function(){
 
     document.getElementById("info").innerHTML=
-      "<h3>No. "+clickedHotspot.no+"</h3>"+
-      "<b>Name:</b> "+clickedHotspot.name+"<br><br>"+
-      "<b>Lat:</b> "+lat.toFixed(2)+"<br>"+
-      "<b>Lng:</b> "+lng.toFixed(2);
+      "<h3>No. "+h.no+"</h3>"+
+      "<b>Name:</b> "+h.name+"<br><br>"+
+      "<b>Lat:</b> "+h.lat.toFixed(2)+"<br>"+
+      "<b>Lng:</b> "+h.lng.toFixed(2);
 
-  }else{
-
-    document.getElementById("info").innerHTML=
-      "<h3>Map Coordinates</h3>"+
-      "<b>Lat:</b> "+lat.toFixed(2)+"<br>"+
-      "<b>Lng:</b> "+lng.toFixed(2);
-
-  }
+  });
 
 });
 
